@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}My Requests - Certificate Request System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">My Certificate Requests</h2>
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+                View and manage your submitted certificate applications
+            </p>
+        </div>
+        <a href="{{ url_for('user.create_request') }}" class="btn btn-primary btn-sm">+ New Request</a>
+    </div>
+
+    {% if requests %}
+        <div class="table-container">
+            <table class="data-table" id="table-my-requests">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Service</th>
+                        <th>Requester</th>
+                        <th>Charge</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td>
+                                <strong><code>{{ req.reference_id }}</code></strong>
+                            </td>
+                            <td>
+                                {{ req.service_name_snapshot }}<br>
+                                <small style="color: var(--text-muted);">ID: {{ req.service_id }}</small>
+                            </td>
+                            <td>{{ req.requester_name }}</td>
+                            <td>
+                                {% if req.charge == 0 %}
+                                    <span style="color: var(--success-dark); font-weight: 600;">Rs. 0 (Free)</span>
+                                {% else %}
+                                    <span style="color: var(--warning-dark); font-weight: 600;">Rs. {{ "%.2f"|format(req.charge) }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ req.status.replace('/', '_') }}">
+                                    {{ req.status }}
+                                </span>
+                            </td>
+                            <td>{{ req.created_at }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <a href="{{ url_for('user.request_details', reference_id=req.reference_id) }}"
+                                       class="btn btn-secondary btn-sm" id="view-{{ req.reference_id }}">
+                                        View
+                                    </a>
+                                    {% if req.status == 'SUBMITTED' %}
+                                        <form action="{{ url_for('user.cancel_request', reference_id=req.reference_id) }}"
+                                              method="POST" class="form-cancel-request" style="display: inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm" id="cancel-{{ req.reference_id }}">
+                                                Cancel Request
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">No certificate requests found.</p>
+            <a href="{{ url_for('user.create_request') }}" class="btn btn-primary">
+                Create Your First Request
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Certificate Request System{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 2rem auto;">
+    <div class="card">
+        <div class="card-header" style="text-align: center; display: block;">
+            <h2 class="card-title">Portal Authentication</h2>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem;">
+                Sign in to manage and process college certificate requests
+            </p>
+        </div>
+
+        <form action="{{ url_for('auth.login') }}" method="POST" id="form-login">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%; margin-top: 0.5rem;">
+                Sign In to Portal
+            </button>
+        </form>
+
+        <div class="demo-box">
+            <h4>
+                <span>&#128273;</span> Demonstration Credentials
+            </h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                Click any credential card below to auto-fill the login form:
+            </p>
+            <div class="demo-account-grid">
+                <div class="demo-pill" data-username="user1" data-password="user123" id="demo-user1">
+                    <strong>USER 1</strong><br>
+                    <code>user1</code> / <code>user123</code><br>
+                    <small style="color: var(--success-dark);">Role: USER</small>
+                </div>
+                <div class="demo-pill" data-username="user2" data-password="user123" id="demo-user2">
+                    <strong>USER 2</strong><br>
+                    <code>user2</code> / <code>user123</code><br>
+                    <small style="color: var(--success-dark);">Role: USER</small>
+                </div>
+                <div class="demo-pill" data-username="admin" data-password="admin123" id="demo-admin">
+                    <strong>ADMIN</strong><br>
+                    <code>admin</code> / <code>admin123</code><br>
+                    <small style="color: var(--primary-color);">Role: ADMINISTRATOR</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

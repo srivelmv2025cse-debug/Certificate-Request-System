@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Certificate Request System{% endblock %} - Sri Eshwar College of Engineering</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand-section">
+                <div class="brand-logo-badge">SE</div>
+                <div class="brand-titles">
+                    <h1>Certificate Request System</h1>
+                </div>
+            </div>
+            <nav class="nav-links">
+                {% if session.get('user_id') %}
+                    {% if session.get('role') == 'ADMINISTRATOR' %}
+                        <a href="{{ url_for('admin.admin_dashboard') }}" id="nav-admin-dashboard">Admin Dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('user.user_dashboard') }}" id="nav-user-dashboard">Dashboard</a>
+                        <a href="{{ url_for('user.create_request') }}" id="nav-create-request">Create Request</a>
+                        <a href="{{ url_for('user.my_requests') }}" id="nav-my-requests">My Requests</a>
+                    {% endif %}
+                    <span class="user-badge">{{ session.get('name') }} ({{ session.get('role') }})</span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" id="nav-logout" style="color: #1e3a8a;">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" id="nav-login">Login</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'error' if category == 'error' else ('success' if category == 'success' else 'info') }}">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 Sri Eshwar College of Engineering &bull; Department of Computer Science and Engineering &bull; Software Engineering Assessment II</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

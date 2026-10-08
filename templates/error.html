@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Certificate Request System{% endblock %}
+
+{% block content %}
+<div style="max-width: 560px; margin: 3rem auto; text-align: center;">
+    <div class="card" style="border-top: 4px solid var(--danger-color);">
+        <div style="font-size: 3.5rem; color: var(--danger-color); font-weight: 800; line-height: 1; margin-bottom: 0.5rem;">
+            {{ code if code else 'Notice' }}
+        </div>
+        <h2 style="color: var(--primary-color); margin-bottom: 1rem;">
+            {{ 'Access Denied' if code == 403 else ('Resource Not Found' if code == 404 else 'System Notification') }}
+        </h2>
+        <div class="alert alert-error" style="display: inline-block; text-align: left; width: 100%; margin-bottom: 1.5rem;">
+            <span>{{ message }}</span>
+        </div>
+        <div>
+            {% if session.get('role') == 'ADMINISTRATOR' %}
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-primary">
+                    Return to Administrator Dashboard
+                </a>
+            {% elif session.get('user_id') %}
+                <a href="{{ url_for('user.user_dashboard') }}" class="btn btn-primary">
+                    Return to User Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                    Return to Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

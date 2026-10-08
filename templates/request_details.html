@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Request {{ req.reference_id }} Details - Certificate Request System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <h2 class="card-title">Request: <code>{{ req.reference_id }}</code></h2>
+                <span class="badge badge-{{ req.status.replace('/', '_') }}" style="font-size: 0.9rem;">
+                    {{ req.status }}
+                </span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                Created at: {{ req.created_at }} | Last updated: {{ req.updated_at }}
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            {% if is_admin_view %}
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Admin Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('user.my_requests') }}" class="btn btn-secondary btn-sm">&larr; Back to My Requests</a>
+            {% endif %}
+
+            <!-- User Cancellation Action (BR9) -->
+            {% if not is_admin_view and req.status == 'SUBMITTED' %}
+                <form action="{{ url_for('user.cancel_request', reference_id=req.reference_id) }}" method="POST" class="form-cancel-request" style="display: inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" id="btn-cancel-request-detail">
+                        Cancel This Request
+                    </button>
+                </form>
+            {% endif %}
+
+            <!-- Admin Progression Action (BR8) -->
+            {% if is_admin_view %}
+                {% if req.status == 'SUBMITTED' %}
+                    <form action="{{ url_for('admin.update_status', reference_id=req.reference_id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="next_status" value="APPROVED/ASSIGNED">
+                        <input type="hidden" name="redirect_to" value="details">
+                        <button type="submit" class="btn btn-warning btn-sm" id="btn-admin-approve">
+                            &rarr; Approve / Assign
+                        </button>
+                    </form>
+                {% elif req.status == 'APPROVED/ASSIGNED' %}
+                    <form action="{{ url_for('admin.update_status', reference_id=req.reference_id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="next_status" value="IN_PROGRESS">
+                        <input type="hidden" name="redirect_to" value="details">
+                        <button type="submit" class="btn btn-primary btn-sm" id="btn-admin-inprogress">
+                            &rarr; Move to IN_PROGRESS
+                        </button>
+                    </form>
+                {% elif req.status == 'IN_PROGRESS' %}
+                    <form action="{{ url_for('admin.update_status', reference_id=req.reference_id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="next_status" value="COMPLETED">
+                        <input type="hidden" name="redirect_to" value="details">
+                        <button type="submit" class="btn btn-success btn-sm" id="btn-admin-complete">
+                            &check; Complete Request
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- BR3 Snapshot Demonstration Card -->
+    <div class="snapshot-banner">
+        <h4>&#128247; Master Data Snapshot Demonstration (BR3)</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            When submitted, service details were permanently snapshotted into this record. Subsequent changes to the master resource catalog do not modify historical requests (verified by T12).
+        </p>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div>
+                <strong>Snapshotted Service Name:</strong>
+                <span id="snapshot-service-name">{{ req.service_name_snapshot }}</span>
+            </div>
+            <div>
+                <strong>Snapshotted Service Value:</strong>
+                <span id="snapshot-service-value">{{ req.service_value_snapshot }}</span>
+            </div>
+            <div>
+                <strong>Allocated Resource:</strong>
+                <span>{{ req.resource_id }}</span>
+            </div>
+            {% if resource %}
+            <div>
+                <strong>Current Master Service Name:</strong>
+                <span style="color: var(--primary-color);">{{ resource.service_name }}</span>
+            </div>
+            <div>
+                <strong>Current Master Capacity:</strong>
+                <span style="color: var(--primary-color);">{{ resource.capacity }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Request Details Grid -->
+    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.75rem;">
+        Application Information
+    </h3>
+    <div class="details-grid">
+        <div class="detail-item">
+            <div class="label">Requester Name (BR5)</div>
+            <div class="value" id="detail-name">{{ req.requester_name }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Contact Phone (BR5)</div>
+            <div class="value" id="detail-phone">{{ req.phone }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Calculated Charge (BR4)</div>
+            <div class="value" id="detail-charge">
+                {% if req.charge == 0 %}
+                    <span style="color: var(--success-dark);">Rs. 0.00 (Waived)</span>
+                {% else %}
+                    <span style="color: var(--warning-dark);">Rs. {{ "%.2f"|format(req.charge) }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Academic Reference</div>
+            <div class="value" id="detail-reference">{{ req.reference_details }}</div>
+        </div>
+        <div class="detail-item" style="grid-column: 1 / -1;">
+            <div class="label">Purpose / Description</div>
+            <div class="value" id="detail-desc" style="font-weight: 400; font-size: 0.95rem;">{{ req.description }}</div>
+        </div>
+    </div>
+
+    <!-- Status History Audit Trail (BR7 & BR8) -->
+    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.75rem;">
+        Status Transition Audit History (REQUEST_STATUS_HISTORY)
+    </h3>
+    <div class="table-container">
+        <table class="data-table" id="table-status-history">
+            <thead>
+                <tr>
+                    <th>Event ID</th>
+                    <th>Old Status</th>
+                    <th>&rarr;</th>
+                    <th>New Status</th>
+                    <th>Actor (ID / Role)</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history %}
+                    <tr>
+                        <td>#{{ h.id }}</td>
+                        <td>
+                            {% if h.old_status and h.old_status != 'NONE' %}
+                                <span class="badge badge-{{ h.old_status.replace('/', '_') }}">{{ h.old_status }}</span>
+                            {% else %}
+                                <span class="badge badge-gray">INITIAL</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--text-muted);">&rarr;</td>
+                        <td>
+                            <span class="badge badge-{{ h.new_status.replace('/', '_') }}">{{ h.new_status }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ h.actor_username }}</strong>
+                            <small style="color: var(--text-muted);">(ID: {{ h.actor_id }}, {{ h.actor_role }})</small>
+                        </td>
+                        <td>{{ h.event_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

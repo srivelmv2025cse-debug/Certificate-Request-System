@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Certificate Request System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Welcome, {{ user_name }}!</h2>
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+                Role: <strong>{{ role }}</strong> | Username: <code>{{ username }}</code>
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('user.create_request') }}" class="btn btn-primary" id="btn-create-request-action">
+                + Create Certificate Request
+            </a>
+            <a href="{{ url_for('user.my_requests') }}" class="btn btn-secondary" id="btn-my-requests-action">
+                View My Requests
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Request Limit Quota Bar -->
+    <div style="background: #f8fafc; border: 1px solid var(--gray-border); padding: 1.25rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-weight: 600; font-size: 0.95rem;">Active Request Limit (BR1):</span>
+            <span style="font-weight: 700; color: {{ 'var(--danger-color)' if active_count >= max_active else 'var(--primary-color)' }};">
+                {{ active_count }} / {{ max_active }} active requests
+            </span>
+        </div>
+        <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+            <div style="background: {{ 'var(--danger-color)' if active_count >= max_active else 'var(--accent-color)' }}; height: 100%; width: {{ (active_count / max_active) * 100 }}%;"></div>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+            A user can have at most 5 active requests (excluding COMPLETED and CANCELLED).
+            {% if active_count >= max_active %}
+                <strong style="color: var(--danger-color);">Active quota full. You cannot submit new requests until existing requests are completed or cancelled.</strong>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Summary of requests -->
+    <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem;">
+        Request Status Overview
+    </h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="badge badge-SUBMITTED">SUBMITTED</span>
+            <div class="stat-value" id="stat-submitted">{{ summary['SUBMITTED'] }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+            <span class="badge badge-APPROVED_ASSIGNED">APPROVED/ASSIGNED</span>
+            <div class="stat-value" id="stat-approved">{{ summary['APPROVED/ASSIGNED'] }}</div>
+            <div class="stat-label">Under Assignment</div>
+        </div>
+        <div class="stat-card">
+            <span class="badge badge-IN_PROGRESS">IN_PROGRESS</span>
+            <div class="stat-value" id="stat-inprogress">{{ summary['IN_PROGRESS'] }}</div>
+            <div class="stat-label">Processing</div>
+        </div>
+        <div class="stat-card">
+            <span class="badge badge-COMPLETED">COMPLETED</span>
+            <div class="stat-value" id="stat-completed">{{ summary['COMPLETED'] }}</div>
+            <div class="stat-label">Delivered</div>
+        </div>
+        <div class="stat-card">
+            <span class="badge badge-CANCELLED">CANCELLED</span>
+            <div class="stat-value" id="stat-cancelled">{{ summary['CANCELLED'] }}</div>
+            <div class="stat-label">Released</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

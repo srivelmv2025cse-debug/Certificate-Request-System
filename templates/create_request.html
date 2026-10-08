@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Create Certificate Request - Certificate Request System{% endblock %}
+
+{% block content %}
+<div style="max-width: 760px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Create Certificate Request</h2>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">
+                    Fill in details to submit a new certificate application
+                </p>
+            </div>
+            <a href="{{ url_for('user.user_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+        </div>
+
+        <!-- Quota & Eligibility Banner -->
+        <div style="background: #f8fafc; border: 1px solid var(--gray-border); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">ACTIVE REQUESTS (BR1):</span>
+                <div style="font-size: 1.1rem; font-weight: 700; color: {{ 'var(--danger-color)' if active_count >= max_active else 'var(--primary-color)' }};">
+                    {{ active_count }} / {{ max_active }} Maximum
+                </div>
+            </div>
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">SERVICE STATUS:</span>
+                <div><span id="service_status_display" class="badge badge-gray">-</span></div>
+            </div>
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">AVAILABILITY:</span>
+                <div><span id="service_avail_display" class="badge badge-gray">-</span></div>
+            </div>
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">ESTIMATED CHARGE (BR4):</span>
+                <div id="calculated_charge_display" style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color);">Rs. 50.00</div>
+            </div>
+        </div>
+
+        {% if active_count >= max_active %}
+            <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+                <strong>Notice:</strong> Active request limit reached ({{ active_count }}/{{ max_active }}). A new request cannot be submitted until existing requests are completed or cancelled.
+            </div>
+        {% endif %}
+
+        <form action="{{ url_for('user.create_request') }}" method="POST" id="form-create-request">
+            <!-- Service Selection -->
+            <div class="form-group">
+                <label for="service_id">Certificate Service Resource *</label>
+                <select name="service_id" id="service_id" class="form-control" required>
+                    <option value="" disabled selected>-- Select Certificate Service --</option>
+                    {% for res in resources %}
+                        <option value="{{ res.resource_id }}"
+                                data-status="{{ res.status }}"
+                                data-avail="{{ res.available_capacity }}"
+                                data-capacity="{{ res.capacity }}"
+                                {% if form_data.get('service_id') == res.resource_id %}selected{% endif %}>
+                            {{ res.resource_id }} - {{ res.service_name }} (Cap: {{ res.capacity }}, Avail: {{ res.available_capacity }}, Status: {{ res.status }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <p class="form-hint">Select the designated certificate service catalog item.</p>
+            </div>
+
+            <!-- Requester Name -->
+            <div class="form-group">
+                <label for="requester_name">Requester Full Name *</label>
+                <input type="text" id="requester_name" name="requester_name" class="form-control"
+                       placeholder="e.g., Demo Student"
+                       value="{{ form_data.get('requester_name', '') }}" required>
+                <p class="form-hint">BR5: Name cannot be blank.</p>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label for="phone">Contact Phone Number (10 digits) *</label>
+                <input type="text" id="phone" name="phone" class="form-control"
+                       placeholder="e.g., 9876543210" pattern="\d{10}" maxlength="10"
+                       value="{{ form_data.get('phone', '') }}" required>
+                <p class="form-hint">BR5: Phone number must contain exactly 10 digits.</p>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">Purpose / Description *</label>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                          placeholder="e.g., Certificate request for academic purpose" required>{{ form_data.get('description', '') }}</textarea>
+                <p class="form-hint">State the academic reason for this certificate.</p>
+            </div>
+
+            <!-- Reference Details -->
+            <div class="form-group">
+                <label for="reference_details">Academic Reference Details / Roll No *</label>
+                <input type="text" id="reference_details" name="reference_details" class="form-control"
+                       placeholder="e.g., CERT-DEMO-001 or 717721CS001"
+                       value="{{ form_data.get('reference_details', '') }}" required>
+                <p class="form-hint">Must provide a valid roll number, registration id, or reference code.</p>
+            </div>
+
+            <!-- Chargeable Amount -->
+            <div class="form-group">
+                <label for="chargeable_amount">Declared Amount / Fee Base (Rs.) *</label>
+                <input type="number" step="0.01" id="chargeable_amount" name="chargeable_amount" class="form-control"
+                       placeholder="e.g., 999 or 1000"
+                       value="{{ form_data.get('chargeable_amount', '999') }}" required>
+                <p class="form-hint">
+                    BR4 Charge Rule: Below Rs.1000 &rarr; <strong>Rs.50 charge</strong>. Rs.1000 or above &rarr; <strong>Rs.0 (Free)</strong>.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" id="btn-submit-request" style="flex: 1;">
+                    Submit Certificate Request
+                </button>
+                <a href="{{ url_for('user.user_dashboard') }}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
